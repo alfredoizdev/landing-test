@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { contact, menuItems, shop } from "./content";
@@ -38,5 +40,18 @@ describe("landing page", () => {
     expect(email.getAttribute("href")).toBe(`mailto:${contact.email}`);
     const phone = within(section).getByRole("link", { name: contact.phone });
     expect(phone.getAttribute("href")).toBe("tel:5035550142");
+  });
+
+  it("uses the coffee beans photo as a full-size hero background under a brown overlay", () => {
+    const { container } = render(<Home />);
+    expect(container.querySelector("section.hero")).toBeTruthy();
+    expect(existsSync(join(process.cwd(), "public", "hero-beans.jpg"))).toBe(true);
+
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const hero = css.match(/\.hero \{([^}]*)\}/)?.[1] ?? "";
+    expect(hero).toContain('url("/hero-beans.jpg")');
+    expect(hero).toMatch(/background-size:\s*cover/);
+    // the brown overlay is listed first, so it is painted on top of the photo
+    expect(hero).toMatch(/linear-gradient\(rgba\(42, 28, 20, 0\.6\)[^;]*url\("\/hero-beans\.jpg"\)/);
   });
 });
