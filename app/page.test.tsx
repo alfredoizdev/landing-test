@@ -140,6 +140,133 @@ describe("landing page", () => {
     expect(phone.getAttribute("href")).toBe("tel:5035550142");
   });
 
+  describe("contact footer", () => {
+    const css = () => readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const rule = (selector: string) =>
+      css().match(new RegExp(`(?:^|\\n)${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
+    const colour = (name: string) => css().match(new RegExp(`${name}:\\s*(#[0-9a-f]{6});`))?.[1] ?? "";
+    const channels = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    // WCAG relative luminance and contrast ratio
+    const luminance = (hex: string) => {
+      const [r, g, b] = channels(hex).map((v) => {
+        const c = v / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const contrast = (a: string, b: string) => {
+      const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+
+    it("paints the footer in a dark, warm caramel brown, across the full width", () => {
+      const [r, g, b] = channels(colour("--caramel"));
+      // a warm dark brown: red over green over blue, dark but still clearly brown rather than black
+      expect(r).toBeGreaterThan(g);
+      expect(g).toBeGreaterThan(b);
+      expect(r).toBeGreaterThan(90);
+      expect(r).toBeLessThan(140);
+      expect(b).toBeLessThan(60);
+      expect(luminance(colour("--caramel"))).toBeLessThan(0.12);
+      expect(luminance(colour("--caramel"))).toBeGreaterThan(luminance(colour("--dark")));
+      expect(rule(".footer-inner")).toMatch(/background:\s*var\(--caramel\)/);
+      expect(rule(".footer-curve")).toMatch(/fill:\s*var\(--caramel\)/);
+      // the footer itself is not held to the page column, so the colour reaches both edges
+      expect(rule(".footer")).not.toMatch(/max-width/);
+      // everything above the curve keeps the cream page background
+      expect(rule(".footer")).not.toMatch(/background/);
+      expect(colour("--bg")).toBe("#f6efe6");
+    });
+
+    it("tops the footer with a smooth curve that is low on the left and high on the right", () => {
+      const { container } = render(<Home />);
+      const footer = container.querySelector("section#contact")!;
+      const curve = footer.firstElementChild!;
+      expect(curve.tagName.toLowerCase()).toBe("svg");
+      expect(curve.getAttribute("aria-hidden")).toBe("true");
+      // stretches to whatever width the screen has
+      expect(curve.getAttribute("preserveAspectRatio")).toBe("none");
+      expect(rule(".footer-curve")).toMatch(/width:\s*100%/);
+
+      const [, , width, height] = curve.getAttribute("viewBox")!.split(" ").map(Number);
+      const d = curve.querySelector("path")!.getAttribute("d")!;
+      const m = d.match(/^M0,(\d+) L0,(\d+) C(\d+),(\d+) (\d+),(\d+) (\d+),(\d+) L(\d+),(\d+) Z$/)!;
+      const [bottom, y0, x1, y1, x2, y2, x3, y3, right, rightBottom] = m.slice(1).map(Number);
+      // the caramel shape is closed along the bottom edge, corner to corner
+      expect(bottom).toBe(height);
+      expect(rightBottom).toBe(height);
+      expect(right).toBe(width);
+      expect(x3).toBe(width);
+      // y grows downwards: the left end sits near the bottom, the right end at the top
+      expect(y0).toBeGreaterThan(height * 0.7);
+      expect(y3).toBe(0);
+      // one curved stroke that only ever climbs, never a straight line
+      const at = (t: number, a: number, b: number, c: number, e: number) =>
+        (1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t ** 2 * c + t ** 3 * e;
+      let last = y0;
+      for (let i = 1; i <= 100; i++) {
+        const y = at(i / 100, y0, y1, y2, y3);
+        expect(y).toBeLessThanOrEqual(last);
+        last = y;
+      }
+      const middle = at(0.5, y0, y1, y2, y3);
+      expect(Math.abs(middle - (y0 + y3) / 2)).toBeGreaterThan(1);
+      expect(x1).toBeLessThan(x2);
+    });
+
+    it("keeps the curve clear of the menu cards, and gentler on phones", () => {
+      const { container } = render(<Home />);
+      // the curve is part of the footer and follows the menu, so it has its own room
+      const menu = container.querySelector("section#menu")!;
+      const curve = container.querySelector(".footer-curve")!;
+      expect(menu.contains(curve)).toBe(false);
+      expect(menu.compareDocumentPosition(curve) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      const shape = rule(".footer-curve");
+      expect(shape).not.toMatch(/position:\s*(absolute|fixed)/);
+      expect(shape).not.toMatch(/margin-top:\s*-/);
+      expect(rule(".footer")).not.toMatch(/margin-top:\s*-/);
+      // the menu keeps its bottom padding as the gap between the mosaic and the curve
+      expect(Number(rule(".section").match(/padding:\s*([\d.]+)rem/)?.[1])).toBeGreaterThanOrEqual(4);
+      // the height follows the screen width, so a narrow phone gets a shallow curve
+      const size = shape.match(/height:\s*clamp\(([\d.]+)rem,\s*([\d.]+)vw,\s*([\d.]+)rem\)/);
+      expect(Number(size?.[1])).toBeLessThan(Number(size?.[3]) / 2);
+      expect(Number(size?.[2])).toBeGreaterThan(0);
+    });
+
+    it("no longer draws a line between the menu and the contact section", () => {
+      expect(css()).not.toMatch(/\.section \+ \.section/);
+      expect(css()).not.toMatch(/border-top/);
+      expect(rule(".footer")).not.toMatch(/border/);
+    });
+
+    it("uses text colours that read well on the caramel", () => {
+      const caramel = colour("--caramel");
+      // title, body text and links use a warm off-white; the small labels a soft cream
+      expect(rule(".footer")).toMatch(/color:\s*var\(--caramel-text\)/);
+      expect(rule(".footer h2")).toMatch(/color:\s*var\(--caramel-text\)/);
+      expect(rule(".footer a")).toMatch(/color:\s*var\(--caramel-text\)/);
+      expect(rule(".contact h3")).toMatch(/color:\s*var\(--caramel-label\)/);
+      for (const name of ["--caramel-text", "--caramel-label"]) {
+        // light, so it reads on the dark caramel, but never pure white
+        expect(colour(name)).not.toBe("#ffffff");
+        expect(luminance(colour(name))).toBeGreaterThan(0.6);
+        expect(luminance(colour(name))).toBeLessThan(0.95);
+        expect(contrast(colour(name), caramel)).toBeGreaterThanOrEqual(4.5);
+      }
+    });
+
+    it("keeps the contact content as it was", () => {
+      render(<Home />);
+      const section = screen.getByRole("region", { name: "Contact" });
+      expect(within(section).getByRole("heading", { level: 2, name: "Contact" })).toBeTruthy();
+      expect(within(section).getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual([
+        "Address",
+        "Opening hours",
+        "Get in touch",
+      ]);
+    });
+  });
+
   it("uses the coffee beans photo as a full-size hero background under a brown overlay", () => {
     const { container } = render(<Home />);
     expect(container.querySelector("section.hero")).toBeTruthy();
