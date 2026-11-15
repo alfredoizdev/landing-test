@@ -5,11 +5,41 @@ export const shop = {
 };
 
 export const menuItems = [
-  { name: "Espresso", description: "A short, syrupy double shot.", price: "$3.00" },
-  { name: "Flat White", description: "Double shot with silky steamed milk.", price: "$4.25" },
-  { name: "Cappuccino", description: "Equal parts espresso, milk and foam.", price: "$4.50" },
-  { name: "Pour Over", description: "Single-origin beans, brewed to order.", price: "$5.00" },
-  { name: "Cold Brew", description: "Steeped for 18 hours, served over ice.", price: "$4.75" },
+  {
+    name: "Espresso",
+    image: "/menu/espresso.jpg",
+    alt: "Espresso with golden crema in a glass cup",
+    description: "A short, syrupy double shot.",
+    price: "$3.00",
+  },
+  {
+    name: "Flat White",
+    image: "/menu/flat-white.jpg",
+    alt: "Flat white with latte art in a white cup",
+    description: "Double shot with silky steamed milk.",
+    price: "$4.25",
+  },
+  {
+    name: "Cappuccino",
+    image: "/menu/cappuccino.jpg",
+    alt: "Foamy cappuccino beside chocolate-dipped pastries",
+    description: "Equal parts espresso, milk and foam.",
+    price: "$4.50",
+  },
+  {
+    name: "Pour Over",
+    image: "/menu/pour-over.jpg",
+    alt: "Coffee blooming in a pour-over dripper",
+    description: "Single-origin beans, brewed to order.",
+    price: "$5.00",
+  },
+  {
+    name: "Cold Brew",
+    image: "/menu/cold-brew.jpg",
+    alt: "Tall glass of cold brew over ice",
+    description: "Steeped for 18 hours, served over ice.",
+    price: "$4.75",
+  },
 ];
 
 export const contact = {

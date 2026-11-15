@@ -60,6 +60,73 @@ describe("landing page", () => {
     expect(within(menu).getByText("$3.00")).toBeTruthy();
   });
 
+  it("shows each menu item as a card with its own photo", () => {
+    render(<Home />);
+    const menu = screen.getByRole("region", { name: "Menu" });
+    const cards = within(menu).getAllByRole("listitem");
+    expect(menuItems).toHaveLength(5);
+    expect(new Set(menuItems.map((item) => item.image)).size).toBe(menuItems.length);
+    menuItems.forEach((item, i) => {
+      expect(cards[i].classList.contains("menu-card")).toBe(true);
+      expect(existsSync(join(process.cwd(), "public", item.image))).toBe(true);
+      const photo = within(cards[i]).getByRole("img", { name: item.alt });
+      expect(decodeURIComponent(photo.getAttribute("src") ?? "")).toContain(item.image);
+      // name, price and description all sit on the card, over the photo
+      const body = cards[i].querySelector(".menu-card-body")!;
+      expect(within(body as HTMLElement).getByText(item.name)).toBeTruthy();
+      expect(within(body as HTMLElement).getByText(item.price)).toBeTruthy();
+      expect(within(body as HTMLElement).getByText(item.description)).toBeTruthy();
+    });
+  });
+
+  it("lays the menu cards out as a mosaic, with larger cards in the first row", () => {
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const grid = css.match(/\.menu \{([^}]*)\}/)?.[1] ?? "";
+    expect(grid).toMatch(/display:\s*grid/);
+    const columns = Number(grid.match(/grid-template-columns:\s*repeat\((\d+),/)?.[1]);
+    const span = (rule: RegExp) => Number(css.match(rule)?.[1]);
+    const small = span(/\.menu-card \{[^}]*grid-column:\s*span (\d+)/);
+    const large = span(/\.menu-card:nth-child\(5n \+ 1\),\s*\.menu-card:nth-child\(5n \+ 2\) \{[^}]*grid-column:\s*span (\d+)/);
+    expect(large).toBeGreaterThan(small);
+    // two large cards fill the first row, three small ones the second
+    expect(large * 2).toBe(columns);
+    expect(small * 3).toBe(columns);
+    expect(css.match(/\.menu-card img \{([^}]*)\}/)?.[1]).toMatch(/object-fit:\s*cover/);
+  });
+
+  it("gives the menu cards tall rows, on desktop and on smaller screens", () => {
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const rows = [...css.matchAll(/\.menu \{[^}]*grid-auto-rows:\s*([\d.]+)rem/g)].map((m) => Number(m[1]));
+    // first the desktop rule, then the tablet override
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toBeGreaterThanOrEqual(23);
+    expect(rows[1]).toBeGreaterThanOrEqual(19);
+  });
+
+  it("zooms the photo and reveals the description when a card is hovered", () => {
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const rule = (selector: string) =>
+      css.match(new RegExp(`(?:^|\\n)${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
+
+    expect(rule(".menu-card")).toMatch(/overflow:\s*hidden/);
+    expect(rule(".menu-card img")).toMatch(/transition:\s*transform/);
+    const zoom = Number(rule(".menu-card:hover img").match(/transform:\s*scale\(([\d.]+)\)/)?.[1]);
+    expect(zoom).toBeGreaterThan(1);
+
+    // hidden at rest, shown on hover
+    expect(rule(".menu-card-more")).toMatch(/opacity:\s*0;/);
+    expect(rule(".menu-card-more")).toMatch(/grid-template-rows:\s*0fr/);
+    expect(rule(".menu-card:hover .menu-card-more")).toMatch(/opacity:\s*1;/);
+    expect(rule(".menu-card:hover .menu-card-more")).toMatch(/grid-template-rows:\s*1fr/);
+
+    // phones cannot hover, so they always see the description
+    const touch = css.match(/@media \(hover: none\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    expect(touch).toMatch(/\.menu-card-more \{[^}]*opacity:\s*1;/);
+    // and people who ask for reduced motion get no zoom
+    const calm = css.match(/@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    expect(calm).toMatch(/\.menu-card:hover img \{[^}]*transform:\s*none/);
+  });
+
   it("shows the address, opening hours, email and phone", () => {
     render(<Home />);
     const section = screen.getByRole("region", { name: "Contact" });
