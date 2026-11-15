@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { contact, menuItems } from "./content";
 import Hero from "./hero";
 
@@ -10,12 +11,23 @@ export default function Home() {
         <h2 id="menu-title">Menu</h2>
         <ul className="menu">
           {menuItems.map((item) => (
-            <li key={item.name}>
-              <div>
-                <h3>{item.name}</h3>
-                <p>{item.description}</p>
+            <li key={item.name} className="menu-card">
+              <Image
+                src={item.image}
+                alt={item.alt}
+                width={500}
+                height={333}
+                sizes="(max-width: 40rem) 100vw, 30rem"
+              />
+              <div className="menu-card-body">
+                <div className="menu-card-head">
+                  <h3>{item.name}</h3>
+                  <span className="price">{item.price}</span>
+                </div>
+                <div className="menu-card-more">
+                  <p>{item.description}</p>
+                </div>
               </div>
-              <span className="price">{item.price}</span>
             </li>
           ))}
         </ul>
