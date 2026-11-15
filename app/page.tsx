@@ -1,19 +1,10 @@
-import { contact, menuItems, shop } from "./content";
+import { contact, menuItems } from "./content";
+import Hero from "./hero";
 
 export default function Home() {
   return (
     <main>
-      <section className="hero" aria-labelledby="hero-title">
-        <nav aria-label="Page sections">
-          <a href="#menu">Menu</a>
-          <a href="#contact">Contact</a>
-        </nav>
-        <h1 id="hero-title">{shop.name}</h1>
-        <p className="welcome">{shop.welcome}</p>
-        <a className="cta" href="#menu">
-          See the menu
-        </a>
-      </section>
+      <Hero />
 
       <section id="menu" className="section" aria-labelledby="menu-title">
         <h2 id="menu-title">Menu</h2>
