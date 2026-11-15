@@ -33,9 +33,15 @@ function scrollTo(y: number) {
 }
 
 describe("landing page", () => {
-  it("shows the hero with the shop name and welcome line", () => {
+  it("shows the hero with an enticing title, the shop name and welcome line", () => {
     render(<Home />);
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Ember & Oak Coffee");
+    const title = screen.getByRole("heading", { level: 1 });
+    expect(title.textContent).toBe("Fall in Love at First Sip");
+    expect(title.textContent).toBe(shop.headline);
+    // the shop name stays visible as a small line above the title
+    const brand = screen.getByText("Ember & Oak Coffee");
+    expect(brand.classList.contains("brand")).toBe(true);
+    expect(brand.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByText(shop.welcome)).toBeTruthy();
   });
 
@@ -100,6 +106,36 @@ describe("landing page", () => {
     expect(base).toBeGreaterThan(0);
     expect(Number(menu?.[1])).toBeGreaterThan(base);
     expect(Number(menu?.[2])).toBeGreaterThan(base);
+  });
+
+  it("shows the hero title and welcome line in large type", () => {
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const title = css.match(/\.hero h1 \{[^}]*font-size:\s*clamp\(([\d.]+)rem,\s*([\d.]+)vw,\s*([\d.]+)rem\)/);
+    // larger than the previous clamp(2.5rem, 8vw, 5rem)
+    expect(Number(title?.[1])).toBeGreaterThan(2.5);
+    expect(Number(title?.[2])).toBeGreaterThan(8);
+    expect(Number(title?.[3])).toBeGreaterThan(5);
+
+    const welcome = css.match(/\.welcome \{[^}]*font-size:\s*clamp\(([\d.]+)rem,[^,]*,\s*([\d.]+)rem\)/);
+    // larger than the previous 1.25rem at every screen width
+    expect(Number(welcome?.[1])).toBeGreaterThan(1.25);
+    expect(Number(welcome?.[2])).toBeGreaterThan(Number(welcome?.[1]));
+  });
+
+  it("shows the See the menu button square-cornered and large", () => {
+    render(<Home />);
+    const button = screen.getByRole("link", { name: "See the menu" });
+    expect(button.classList.contains("cta")).toBe(true);
+    expect(button.getAttribute("href")).toBe("#menu");
+
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const cta = css.match(/\.cta \{([^}]*)\}/)?.[1] ?? "";
+    expect(cta).toMatch(/border-radius:\s*0;/);
+    const padding = cta.match(/padding:\s*([\d.]+)rem\s+([\d.]+)rem/);
+    // larger than the previous 0.85rem 1.75rem padding and inherited 1rem text
+    expect(Number(padding?.[1])).toBeGreaterThan(0.85);
+    expect(Number(padding?.[2])).toBeGreaterThan(1.75);
+    expect(Number(cta.match(/font-size:\s*([\d.]+)rem/)?.[1])).toBeGreaterThan(1);
   });
 
   describe("hero parallax", () => {
