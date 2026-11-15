@@ -125,6 +125,14 @@ h3 {
   text-decoration: none;
 }
 
+/* Same serif and off-white as the welcome line, a little smaller. */
+.open-line {
+  margin: 1.5rem 0 0;
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  line-height: 1.4;
+  color: #e0d2c1;
+}
+
 .section {
   max-width: 60rem;
   margin: 0 auto;

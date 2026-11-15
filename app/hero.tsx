@@ -72,6 +72,7 @@ export default function Hero() {
         <a className="cta" href="#menu">
           See the menu
         </a>
+        <p className="open-line">{shop.openLine}</p>
       </div>
     </section>
   );
