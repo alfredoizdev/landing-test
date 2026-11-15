@@ -86,23 +86,37 @@ h3 {
   text-decoration: none;
 }
 
+.brand {
+  margin: 0 0 1.25rem;
+  font-family: system-ui, sans-serif;
+  font-size: 1.125rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #e0d2c1;
+}
+
 .hero h1 {
-  font-size: clamp(2.5rem, 8vw, 5rem);
+  max-width: 60rem;
+  margin-inline: auto;
+  line-height: 1.05;
+  font-size: clamp(3.25rem, 11vw, 7.5rem);
 }
 
 .welcome {
-  max-width: 32rem;
-  margin: 1.25rem auto 2.5rem;
-  font-size: 1.25rem;
+  max-width: 46rem;
+  margin: 1.5rem auto 3rem;
+  font-size: clamp(1.5rem, 2.8vw, 2.125rem);
+  line-height: 1.4;
   color: #e0d2c1;
 }
 
 .cta {
   display: inline-block;
-  padding: 0.85rem 1.75rem;
+  padding: 1.25rem 3rem;
   background: var(--accent);
   color: #fff;
-  border-radius: 999px;
+  border-radius: 0;
+  font-size: 1.375rem;
   font-family: system-ui, sans-serif;
   text-decoration: none;
 }

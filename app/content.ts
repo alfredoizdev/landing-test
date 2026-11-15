@@ -1,5 +1,6 @@
 export const shop = {
   name: "Ember & Oak Coffee",
+  headline: "Fall in Love at First Sip",
   welcome: "Small-batch coffee, roasted in house and poured with care.",
 };
 

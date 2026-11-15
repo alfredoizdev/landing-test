@@ -66,7 +66,8 @@ export default function Hero() {
         <a href="#contact">Contact</a>
       </nav>
       <div ref={contentRef} className="hero-content">
-        <h1 id="hero-title">{shop.name}</h1>
+        <p className="brand">{shop.name}</p>
+        <h1 id="hero-title">{shop.headline}</h1>
         <p className="welcome">{shop.welcome}</p>
         <a className="cta" href="#menu">
           See the menu
