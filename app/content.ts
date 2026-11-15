@@ -42,6 +42,21 @@ export const menuItems = [
   },
 ];
 
+export const reviews = [
+  {
+    name: "Lucía M.",
+    quote: "The best flat white in the neighborhood. I come every morning and it never lets me down.",
+  },
+  {
+    name: "Carlos R.",
+    quote: "You can tell they roast the coffee right here: the aroma greets you at the door.",
+  },
+  {
+    name: "Ana P.",
+    quote: "A cozy spot with a friendly touch. The cold brew is wonderful.",
+  },
+];
+
 export const contact = {
   address: "214 Alder Street, Portland, OR 97204",
   hours: [

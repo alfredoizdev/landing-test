@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { contact, menuItems } from "./content";
+import { contact, menuItems, reviews } from "./content";
 import Hero from "./hero";
 
 export default function Home() {
@@ -28,6 +28,23 @@ export default function Home() {
                   <p>{item.description}</p>
                 </div>
               </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section id="reviews" className="section" aria-labelledby="reviews-title">
+        <h2 id="reviews-title">What our customers say</h2>
+        <ul className="reviews">
+          {reviews.map((review) => (
+            <li key={review.name} className="review-card">
+              <figure>
+                <p className="stars" role="img" aria-label="5 out of 5 stars">
+                  ★★★★★
+                </p>
+                <blockquote>{review.quote}</blockquote>
+                <figcaption>{review.name}</figcaption>
+              </figure>
             </li>
           ))}
         </ul>

@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { contact, menuItems, shop } from "./content";
+import { contact, menuItems, reviews, shop } from "./content";
 import { parallaxAt } from "./hero";
 import Home from "./page";
 
@@ -125,6 +125,69 @@ describe("landing page", () => {
     // and people who ask for reduced motion get no zoom
     const calm = css.match(/@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
     expect(calm).toMatch(/\.menu-card:hover img \{[^}]*transform:\s*none/);
+  });
+
+  it("shows three customer reviews between the menu and the contact details", () => {
+    render(<Home />);
+    const section = screen.getByRole("region", { name: "What our customers say" });
+    const menu = screen.getByRole("region", { name: "Menu" });
+    const contactSection = screen.getByRole("region", { name: "Contact" });
+    expect(menu.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(section.compareDocumentPosition(contactSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    const cards = within(section).getAllByRole("listitem");
+    expect(reviews).toHaveLength(3);
+    expect(cards).toHaveLength(3);
+    reviews.forEach((review, i) => {
+      expect(cards[i].classList.contains("review-card")).toBe(true);
+      expect(within(cards[i]).getByText(review.quote)).toBeTruthy();
+      expect(within(cards[i]).getByText(review.name)).toBeTruthy();
+      // first name and the initial of the surname only
+      expect(review.name).toMatch(/^\p{Lu}\p{Ll}+ \p{Lu}\.$/u);
+      const stars = within(cards[i]).getByRole("img", { name: "5 out of 5 stars" });
+      expect(stars.textContent?.trim()).toBe("★★★★★");
+    });
+  });
+
+  it("styles the review cards dark brown, rounded and softly shadowed, with readable off-white text and light gold stars", () => {
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const token = (name: string) => css.match(new RegExp(`--${name}:\\s*(#[0-9a-f]{6})`))?.[1] ?? "";
+    const luminance = (hex: string) => {
+      const [r, g, b] = [1, 3, 5].map((i) => {
+        const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const contrast = (a: string, b: string) => {
+      const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+
+    const card = css.match(/\.review-card \{([^}]*)\}/)?.[1] ?? "";
+    expect(card).toMatch(/background:\s*var\(--brown\)/);
+    expect(card).toMatch(/color:\s*var\(--bg\)/);
+    expect(card).toMatch(/border-radius:\s*[\d.]+rem/);
+    const shadow = Number(card.match(/box-shadow:[^;]*rgba\(42, 28, 20, ([\d.]+)\)/)?.[1]);
+    expect(shadow).toBeGreaterThan(0);
+    expect(shadow).toBeLessThanOrEqual(0.15);
+    expect(css.match(/\.review-card \.stars \{([^}]*)\}/)?.[1]).toMatch(/color:\s*var\(--gold\)/);
+    expect(css.match(/\.review-card figcaption \{([^}]*)\}/)?.[1]).toMatch(/color:\s*var\(--line\)/);
+
+    // off-white rather than pure white, and every colour on the card clears WCAG AAA (7:1)
+    expect(token("bg")).not.toBe("#ffffff");
+    for (const name of ["bg", "gold", "line"]) {
+      expect(contrast(token(name), token("brown"))).toBeGreaterThanOrEqual(7);
+    }
+  });
+
+  it("puts the review cards in a row of three, and one under another on phones", () => {
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const row = css.match(/\.reviews \{([^}]*)\}/)?.[1] ?? "";
+    expect(row).toMatch(/display:\s*grid/);
+    expect(row).toMatch(/grid-template-columns:\s*repeat\(3, 1fr\)/);
+    const phone = css.match(/@media \(max-width: 40rem\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    expect(phone).toMatch(/\.reviews \{[^}]*grid-template-columns:\s*1fr;/);
   });
 
   it("shows the address, opening hours, email and phone", () => {
