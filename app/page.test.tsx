@@ -194,9 +194,9 @@ describe("landing page", () => {
     render(<Home />);
     const section = screen.getByRole("region", { name: "Contact" });
     expect(within(section).getByText("214 Alder Street, Portland, OR 97204")).toBeTruthy();
-    contact.hours.forEach((slot) => {
-      expect(within(section).getByText(`${slot.days}: ${slot.time}`)).toBeTruthy();
-    });
+    const hours = within(section).getByText("Open every day, 7:00 am – 7:00 pm");
+    expect(hours.tagName).toBe("P");
+    expect(within(section).queryByText(/Monday – Friday|Saturday – Sunday/)).toBeNull();
     const email = within(section).getByRole("link", { name: contact.email });
     expect(email.getAttribute("href")).toBe(`mailto:${contact.email}`);
     const phone = within(section).getByRole("link", { name: contact.phone });
