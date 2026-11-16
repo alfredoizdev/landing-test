@@ -395,6 +395,37 @@ describe("landing page", () => {
     expect(Number(cta.match(/font-size:\s*([\d.]+)rem/)?.[1])).toBeGreaterThan(1);
   });
 
+  it("shows the opening line under the See the menu button, like the welcome line but a little smaller", () => {
+    const { container } = render(<Home />);
+    const line = screen.getByText("Open every day, 7am to 7pm");
+    expect(line.classList.contains("open-line")).toBe(true);
+    const button = screen.getByRole("link", { name: "See the menu" });
+    expect(button.nextElementSibling).toBe(line);
+    // it moves and fades with the rest of the hero text
+    expect(line.parentElement).toBe(container.querySelector(".hero-content"));
+
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const rule = (selector: string) => css.match(new RegExp(`\\${selector} \\{([^}]*)\\}`))?.[1] ?? "";
+    const open = rule(".open-line");
+    const welcome = rule(".welcome");
+    // same font as the welcome line: neither rule overrides the page's serif
+    expect(open).not.toMatch(/font-family/);
+    expect(welcome).not.toMatch(/font-family/);
+    // same off-white, never pure white
+    const colour = (block: string) => block.match(/color:\s*(#[0-9a-f]{6});/)?.[1];
+    expect(colour(open)).toBe("#e0d2c1");
+    expect(colour(open)).toBe(colour(welcome));
+    // a little smaller at both ends of the range
+    const size = (block: string) =>
+      block.match(/font-size:\s*clamp\(([\d.]+)rem,\s*([\d.]+)vw,\s*([\d.]+)rem\)/)!.slice(1).map(Number);
+    const [openMin, openFluid, openMax] = size(open);
+    const [welcomeMin, welcomeFluid, welcomeMax] = size(welcome);
+    expect(openMin).toBeLessThan(welcomeMin);
+    expect(openFluid).toBeLessThan(welcomeFluid);
+    expect(openMax).toBeLessThan(welcomeMax);
+    expect(openMin).toBeGreaterThanOrEqual(1);
+  });
+
   describe("hero parallax", () => {
     const layers = (container: HTMLElement) => ({
       image: container.querySelector<HTMLElement>(".hero-bg")!,
