@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { contact, menuItems, reviews } from "./content";
+import { contact, faqs, menuItems, reviews } from "./content";
 import Hero from "./hero";
 
 export default function Home() {
@@ -45,6 +45,18 @@ export default function Home() {
                 <blockquote>{review.quote}</blockquote>
                 <figcaption>{review.name}</figcaption>
               </figure>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section id="faq" className="section" aria-labelledby="faq-title">
+        <h2 id="faq-title">Frequently asked questions</h2>
+        <ul className="faq">
+          {faqs.map((item) => (
+            <li key={item.question} className="faq-item">
+              <h3>{item.question}</h3>
+              <p>{item.answer}</p>
             </li>
           ))}
         </ul>

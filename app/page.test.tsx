@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { contact, menuItems, reviews, shop } from "./content";
+import { contact, faqs, menuItems, reviews, shop } from "./content";
 import { parallaxAt } from "./hero";
 import Home from "./page";
 
@@ -147,6 +147,36 @@ describe("landing page", () => {
       const stars = within(cards[i]).getByRole("img", { name: "5 out of 5 stars" });
       expect(stars.textContent?.trim()).toBe("★★★★★");
     });
+  });
+
+  it("shows the FAQs between the reviews and the contact details", () => {
+    render(<Home />);
+    const reviewsSection = screen.getByRole("region", { name: "What our customers say" });
+    const faqSection = screen.getByRole("region", { name: "Frequently asked questions" });
+    const contactSection = screen.getByRole("region", { name: "Contact" });
+    expect(reviewsSection.compareDocumentPosition(faqSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(faqSection.compareDocumentPosition(contactSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    const items = within(faqSection).getAllByRole("listitem");
+    expect(faqs).toHaveLength(3);
+    expect(items).toHaveLength(3);
+    faqs.forEach((faq, i) => {
+      expect(within(items[i]).getByRole("heading", { name: faq.question, level: 3 })).toBeTruthy();
+      expect(within(items[i]).getByText(faq.answer)).toBeTruthy();
+      expect(faq.answer).toMatch(/^Yes\b/);
+    });
+  });
+
+  it("styles FAQ cards to match the reviews and stack them on phones", () => {
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const list = css.match(/\.faq \{([^}]*)\}/)?.[1] ?? "";
+    const card = css.match(/\.faq-item \{([^}]*)\}/)?.[1] ?? "";
+    expect(list).toMatch(/display:\s*grid/);
+    expect(list).toMatch(/grid-template-columns:\s*repeat\(3, 1fr\)/);
+    expect(card).toMatch(/background:\s*var\(--brown\)/);
+    expect(card).toMatch(/color:\s*var\(--bg\)/);
+    const phone = css.match(/@media \(max-width: 40rem\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    expect(phone).toMatch(/\.faq \{[^}]*grid-template-columns:\s*1fr;/);
   });
 
   it("styles the review cards dark brown, rounded and softly shadowed, with readable off-white text and light gold stars", () => {
