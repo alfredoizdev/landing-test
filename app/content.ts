@@ -60,10 +60,7 @@ export const reviews = [
 
 export const contact = {
   address: "214 Alder Street, Portland, OR 97204",
-  hours: [
-    { days: "Monday – Friday", time: "7:00 am – 6:00 pm" },
-    { days: "Saturday – Sunday", time: "8:00 am – 4:00 pm" },
-  ],
+  hours: "Open every day, 7:00 am – 7:00 pm",
   email: "hello@emberandoak.example",
   phone: "(503) 555-0142",
 };

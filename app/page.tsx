@@ -65,13 +65,7 @@ export default function Home() {
             </div>
             <div>
               <h3>Opening hours</h3>
-              <ul className="hours">
-                {contact.hours.map((slot) => (
-                  <li key={slot.days}>
-                    {slot.days}: {slot.time}
-                  </li>
-                ))}
-              </ul>
+              <p className="hours">{contact.hours}</p>
             </div>
             <div>
               <h3>Get in touch</h3>
