@@ -58,6 +58,21 @@ export const reviews = [
   },
 ];
 
+export const faqs = [
+  {
+    question: "Do you have wifi?",
+    answer: "Yes, we offer complimentary Wi-Fi.",
+  },
+  {
+    question: "Do you take reservations?",
+    answer: "Yes, reservations are welcome.",
+  },
+  {
+    question: "Do you have vegan options?",
+    answer: "Yes, we offer vegan options.",
+  },
+];
+
 export const contact = {
   address: "214 Alder Street, Portland, OR 97204",
   hours: "Open every day, 7:00 am – 7:00 pm",
