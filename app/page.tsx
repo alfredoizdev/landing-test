@@ -89,6 +89,7 @@ export default function Home() {
               </p>
             </div>
           </div>
+          <p className="copyright">{contact.copyright}</p>
         </div>
       </section>
     </main>
