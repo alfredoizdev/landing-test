@@ -78,4 +78,5 @@ export const contact = {
   hours: "Open every day, 7:00 am – 7:00 pm",
   email: "hello@emberandoak.example",
   phone: "(503) 555-0142",
+  copyright: "© 2026 Ember & Oak. All rights reserved.",
 };

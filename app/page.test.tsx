@@ -383,6 +383,31 @@ describe("landing page", () => {
         "Get in touch",
       ]);
     });
+
+    it("ends with a small, centred copyright line below the contact details", () => {
+      render(<Home />);
+      const section = screen.getByRole("region", { name: "Contact" });
+      const line = within(section).getByText("© 2026 Ember & Oak. All rights reserved.");
+      expect(line.tagName).toBe("P");
+      expect(line.classList.contains("copyright")).toBe(true);
+      // below the address, hours and contact details, as the last thing in the footer
+      const details = section.querySelector(".contact")!;
+      expect(details.contains(line)).toBe(false);
+      expect(details.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(section.querySelector(".footer-inner")!.lastElementChild).toBe(line);
+
+      const style = rule(".copyright");
+      expect(style).toMatch(/text-align:\s*center/);
+      // still small: below the footer's body text (1rem), but a touch larger
+      // than its small labels so the line is easy to read
+      const size = Number(style.match(/font-size:\s*([\d.]+)rem/)?.[1]);
+      const labels = Number(rule(".contact h3").match(/font-size:\s*([\d.]+)rem/)?.[1]);
+      expect(size).toBeLessThan(1);
+      expect(size).toBeGreaterThan(labels);
+      // the footer's warm off-white, never pure white
+      expect(style).toMatch(/color:\s*var\(--caramel-text\)/);
+      expect(style).not.toMatch(/#fff\b|#ffffff|\bwhite\b/i);
+    });
   });
 
   it("uses the coffee beans photo as a full-size hero background under a brown overlay", () => {
