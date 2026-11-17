@@ -52,7 +52,7 @@ export default function Home() {
       </section>
 
       <section id="faq" className="section" aria-labelledby="faq-title">
-        <h2 id="faq-title">Frequently asked questions</h2>
+        <h2 id="faq-title">Questions we hear often</h2>
         <ul className="faq">
           {faqs.map((item) => (
             <li key={item.question} className="faq-item">

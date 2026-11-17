@@ -177,7 +177,7 @@ describe("landing page", () => {
   it("shows the FAQs between the reviews and the contact details", () => {
     render(<Home />);
     const reviewsSection = screen.getByRole("region", { name: "What our customers say" });
-    const faqSection = screen.getByRole("region", { name: "Frequently asked questions" });
+    const faqSection = screen.getByRole("region", { name: "Questions we hear often" });
     const contactSection = screen.getByRole("region", { name: "Contact" });
     expect(reviewsSection.compareDocumentPosition(faqSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(faqSection.compareDocumentPosition(contactSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
