@@ -149,6 +149,31 @@ describe("landing page", () => {
     });
   });
 
+  it("shows a small italic subtitle under the reviews heading, above the cards", () => {
+    render(<Home />);
+    const section = screen.getByRole("region", { name: "What our customers say" });
+    const heading = within(section).getByRole("heading", { name: "What our customers say", level: 2 });
+    const subtitle = within(section).getByText("Real words from our regulars!");
+    const list = within(section).getByRole("list");
+
+    // right after the heading and before the review cards
+    expect(heading.nextElementSibling).toBe(subtitle);
+    expect(subtitle.nextElementSibling).toBe(list);
+    expect(subtitle.tagName).toBe("P");
+    expect(subtitle.classList.contains("section-subtitle")).toBe(true);
+
+    // small, italic, dark text on the light page background
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    const rule = css.match(/\.section-subtitle \{([^}]*)\}/)?.[1] ?? "";
+    const size = Number(rule.match(/font-size:\s*([\d.]+)rem/)?.[1]);
+    expect(size).toBeGreaterThan(0);
+    expect(size).toBeLessThan(1);
+    expect(rule).toMatch(/font-style:\s*italic/);
+    expect(rule).toMatch(/color:\s*var\(--brown\)/);
+    expect(css).toMatch(/--brown:\s*#4a2c1a/);
+    expect(css).toMatch(/--bg:\s*#f6efe6/);
+  });
+
   it("shows the FAQs between the reviews and the contact details", () => {
     render(<Home />);
     const reviewsSection = screen.getByRole("region", { name: "What our customers say" });

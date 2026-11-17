@@ -35,6 +35,7 @@ export default function Home() {
 
       <section id="reviews" className="section" aria-labelledby="reviews-title">
         <h2 id="reviews-title">What our customers say</h2>
+        <p className="section-subtitle">Real words from our regulars!</p>
         <ul className="reviews">
           {reviews.map((review) => (
             <li key={review.name} className="review-card">
