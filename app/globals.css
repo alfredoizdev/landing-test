@@ -321,6 +321,20 @@ h3 {
   }
 }
 
+/* Small line under a section heading. It takes over the gap the heading
+   normally leaves, so it sits close to the heading and clear of the cards. */
+.section h2:has(+ .section-subtitle) {
+  margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+  margin: 0 0 2rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--brown);
+}
+
 /* Customer reviews: three cards in a row, stacked on phones. */
 .reviews {
   display: grid;
