@@ -9,6 +9,8 @@
   --caramel: #6b3f1d;
   --caramel-text: #f7efe4;
   --caramel-label: #ead9c4;
+  /* Shallower on phones, deeper on wide screens. */
+  --footer-curve-height: clamp(2.5rem, 10vw, 10rem);
 }
 
 * {
@@ -415,19 +417,71 @@ h3 {
   }
 }
 
-/* Contact footer: dark caramel brown with warm off-white text, full width, with a curved top edge. The curve is
-   an SVG in the normal flow, so it takes its own room below the menu and can
-   never sit on top of the cards. */
-.footer {
+/* Location map: full screen width, just above the footer. Its bottom part runs
+   under the footer curve, so the map shows above the curve instead of cream. */
+.location {
+  position: relative;
   margin-top: 1.5rem;
+  margin-bottom: calc(-1 * var(--footer-curve-height));
+}
+
+.location-map {
+  display: block;
+  width: 100%;
+  height: calc(26rem + var(--footer-curve-height));
+  border: 0;
+}
+
+/* The map ignores touches until "Move the map" is pressed, so a swipe over it
+   scrolls the page instead of panning the map. */
+.location-map[data-active="false"] {
+  pointer-events: none;
+}
+
+/* Caramel café pin, its tip on the middle of the map (the café). */
+.location-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2rem;
+  height: auto;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  fill: var(--caramel);
+}
+
+.location-pin circle {
+  fill: var(--caramel-text);
+}
+
+.location-toggle {
+  position: absolute;
+  top: 1rem;
+  /* Left side, clear of the map's zoom control in the top-right corner. */
+  left: 1rem;
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--caramel);
+  color: var(--caramel-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Contact footer: dark caramel brown with warm off-white text, full width, with a curved top edge. The curve is
+   an SVG in the normal flow, so it takes its own room and can never sit on top
+   of the cards; only the map above slides under it. */
+.footer {
+  /* Drawn on top of the map, whose bottom edge runs under the curve. */
+  position: relative;
   color: var(--caramel-text);
 }
 
 .footer-curve {
   display: block;
   width: 100%;
-  /* Shallower on phones, deeper on wide screens. */
-  height: clamp(2.5rem, 10vw, 10rem);
+  height: var(--footer-curve-height);
   /* Tucks under the block below so no hairline shows between them. */
   margin-bottom: -1px;
   fill: var(--caramel);

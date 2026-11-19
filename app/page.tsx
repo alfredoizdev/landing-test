@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { contact, faqs, menuItems, reviews } from "./content";
 import Hero from "./hero";
+import LocationMap from "./location-map";
 
 export default function Home() {
   return (
@@ -61,6 +62,10 @@ export default function Home() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section id="location" className="location" aria-label="Find us">
+        <LocationMap />
       </section>
 
       <section id="contact" className="footer" aria-labelledby="contact-title">

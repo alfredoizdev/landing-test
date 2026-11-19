@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { contact, faqs, menuItems, reviews, shop } from "./content";
+import { contact, faqs, location, menuItems, reviews, shop } from "./content";
 import { parallaxAt } from "./hero";
 import Home from "./page";
 
@@ -11,6 +11,12 @@ afterEach(() => {
   vi.unstubAllGlobals();
   Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
 });
+
+// Body of the top-level globals.css rule for an exact selector, shared by the CSS checks.
+function cssRule(selector: string) {
+  const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+  return css.match(new RegExp(`(?:^|\\n)${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
+}
 
 let frames: FrameRequestCallback[] = [];
 
@@ -105,19 +111,16 @@ describe("landing page", () => {
 
   it("zooms the photo and reveals the description when a card is hovered", () => {
     const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
-    const rule = (selector: string) =>
-      css.match(new RegExp(`(?:^|\\n)${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
-
-    expect(rule(".menu-card")).toMatch(/overflow:\s*hidden/);
-    expect(rule(".menu-card img")).toMatch(/transition:\s*transform/);
-    const zoom = Number(rule(".menu-card:hover img").match(/transform:\s*scale\(([\d.]+)\)/)?.[1]);
+    expect(cssRule(".menu-card")).toMatch(/overflow:\s*hidden/);
+    expect(cssRule(".menu-card img")).toMatch(/transition:\s*transform/);
+    const zoom = Number(cssRule(".menu-card:hover img").match(/transform:\s*scale\(([\d.]+)\)/)?.[1]);
     expect(zoom).toBeGreaterThan(1);
 
     // hidden at rest, shown on hover
-    expect(rule(".menu-card-more")).toMatch(/opacity:\s*0;/);
-    expect(rule(".menu-card-more")).toMatch(/grid-template-rows:\s*0fr/);
-    expect(rule(".menu-card:hover .menu-card-more")).toMatch(/opacity:\s*1;/);
-    expect(rule(".menu-card:hover .menu-card-more")).toMatch(/grid-template-rows:\s*1fr/);
+    expect(cssRule(".menu-card-more")).toMatch(/opacity:\s*0;/);
+    expect(cssRule(".menu-card-more")).toMatch(/grid-template-rows:\s*0fr/);
+    expect(cssRule(".menu-card:hover .menu-card-more")).toMatch(/opacity:\s*1;/);
+    expect(cssRule(".menu-card:hover .menu-card-more")).toMatch(/grid-template-rows:\s*1fr/);
 
     // phones cannot hover, so they always see the description
     const touch = css.match(/@media \(hover: none\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
@@ -258,10 +261,75 @@ describe("landing page", () => {
     expect(phone.getAttribute("href")).toBe("tel:5035550142");
   });
 
+  it("shows a map with the café pinned, right before the footer", () => {
+    render(<Home />);
+    const faqSection = screen.getByRole("region", { name: "Questions we hear often" });
+    const mapSection = screen.getByRole("region", { name: "Find us" });
+    const contactSection = screen.getByRole("region", { name: "Contact" });
+    expect(faqSection.compareDocumentPosition(mapSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(mapSection.nextElementSibling).toBe(contactSection);
+
+    const map = within(mapSection).getByTitle(`Map showing Ember & Oak at ${contact.address}`);
+    expect(map.tagName).toBe("IFRAME");
+    const src = new URL(map.getAttribute("src")!);
+    expect(src.hostname).toBe("www.openstreetmap.org");
+    // the café sits in the middle of the shown area
+    const [west, south, east, north] = src.searchParams.get("bbox")!.split(",").map(Number);
+    expect((west + east) / 2).toBeCloseTo(location.lng, 6);
+    expect((south + north) / 2).toBeCloseTo(location.lat, 6);
+  });
+
+  it("marks the café with a caramel pin like the footer, not the map's green one", () => {
+    render(<Home />);
+    const mapSection = screen.getByRole("region", { name: "Find us" });
+    const map = within(mapSection).getByTitle(`Map showing Ember & Oak at ${contact.address}`);
+    // the embed's own green marker is left off
+    expect(new URL(map.getAttribute("src")!).searchParams.has("marker")).toBe(false);
+
+    expect(mapSection.querySelector("svg.location-pin")).not.toBeNull();
+    expect(cssRule(".location-pin")).toMatch(/fill:\s*var\(--caramel\)/);
+    expect(cssRule(".footer-curve")).toMatch(/fill:\s*var\(--caramel\)/);
+    // its tip lands on the middle of the map, where the café is
+    expect(cssRule(".location-pin")).toMatch(/top:\s*50%/);
+    expect(cssRule(".location-pin")).toMatch(/left:\s*50%/);
+    expect(cssRule(".location-pin")).toMatch(/transform:\s*translate\(-50%,\s*-100%\)/);
+    expect(cssRule(".location-pin")).toMatch(/pointer-events:\s*none/);
+  });
+
+  it("stretches the map across the whole screen width, with no side margins", () => {
+    render(<Home />);
+    const mapSection = screen.getByRole("region", { name: "Find us" });
+    // not held to the page column like the other sections
+    expect(mapSection.classList.contains("section")).toBe(false);
+    expect(cssRule(".location")).not.toMatch(/max-width|padding|margin-inline|margin:/);
+    expect(cssRule(".location-map")).toMatch(/width:\s*100%/);
+    expect(cssRule(".location-map")).toMatch(/display:\s*block/);
+  });
+
+  it("lets a swipe over the map scroll the page until the visitor chooses to move the map", () => {
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    expect(css).toMatch(/\.location-map\[data-active="false"\] \{[^}]*pointer-events:\s*none/);
+    render(<Home />);
+    const mapSection = screen.getByRole("region", { name: "Find us" });
+    const map = within(mapSection).getByTitle(`Map showing Ember & Oak at ${contact.address}`);
+    expect(map.getAttribute("data-active")).toBe("false");
+
+    fireEvent.click(within(mapSection).getByRole("button", { name: "Move the map" }));
+    expect(within(mapSection).getByTitle(map.title).getAttribute("data-active")).toBe("true");
+    // the pin would drift off the café while the map moves, so it steps aside
+    expect(mapSection.querySelector(".location-pin")).toBeNull();
+
+    fireEvent.click(within(mapSection).getByRole("button", { name: "Done moving the map" }));
+    // the map snaps back to the café and the pin returns
+    const reset = within(mapSection).getByTitle(map.title);
+    expect(reset).not.toBe(map);
+    expect(reset.getAttribute("data-active")).toBe("false");
+    expect(mapSection.querySelector(".location-pin")).not.toBeNull();
+  });
+
   describe("contact footer", () => {
     const css = () => readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
-    const rule = (selector: string) =>
-      css().match(new RegExp(`(?:^|\\n)${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
+    const rule = cssRule;
     const colour = (name: string) => css().match(new RegExp(`${name}:\\s*(#[0-9a-f]{6});`))?.[1] ?? "";
     const channels = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
     // WCAG relative luminance and contrast ratio
@@ -291,9 +359,7 @@ describe("landing page", () => {
       expect(rule(".footer-curve")).toMatch(/fill:\s*var\(--caramel\)/);
       // the footer itself is not held to the page column, so the colour reaches both edges
       expect(rule(".footer")).not.toMatch(/max-width/);
-      // everything above the curve keeps the cream page background
       expect(rule(".footer")).not.toMatch(/background/);
-      expect(colour("--bg")).toBe("#f6efe6");
     });
 
     it("tops the footer with a smooth curve that is low on the left and high on the right", () => {
@@ -346,9 +412,19 @@ describe("landing page", () => {
       // the menu keeps its bottom padding as the gap between the mosaic and the curve
       expect(Number(rule(".section").match(/padding:\s*([\d.]+)rem/)?.[1])).toBeGreaterThanOrEqual(4);
       // the height follows the screen width, so a narrow phone gets a shallow curve
-      const size = shape.match(/height:\s*clamp\(([\d.]+)rem,\s*([\d.]+)vw,\s*([\d.]+)rem\)/);
+      expect(shape).toMatch(/height:\s*var\(--footer-curve-height\)/);
+      const size = css().match(/--footer-curve-height:\s*clamp\(([\d.]+)rem,\s*([\d.]+)vw,\s*([\d.]+)rem\)/);
       expect(Number(size?.[1])).toBeLessThan(Number(size?.[3]) / 2);
       expect(Number(size?.[2])).toBeGreaterThan(0);
+    });
+
+    it("draws the curve over the bottom of the map, with no gap between them", () => {
+      // the map is pulled down by exactly the curve's height, so it runs under the curve
+      expect(rule(".location")).toMatch(/margin-bottom:\s*calc\(-1 \* var\(--footer-curve-height\)\)/);
+      expect(rule(".location-map")).toMatch(/height:\s*calc\([\d.]+rem \+ var\(--footer-curve-height\)\)/);
+      expect(rule(".location-map")).toMatch(/border:\s*0/);
+      // the footer is painted above the map
+      expect(rule(".footer")).toMatch(/position:\s*relative/);
     });
 
     it("no longer draws a line between the menu and the contact section", () => {
