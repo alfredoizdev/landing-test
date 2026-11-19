@@ -398,12 +398,17 @@ describe("landing page", () => {
 
       const style = rule(".copyright");
       expect(style).toMatch(/text-align:\s*center/);
-      // still small: below the footer's body text (1rem), but a touch larger
-      // than its small labels so the line is easy to read
+      // the footer text is a little larger than the page's 1rem, with the labels and
+      // copyright scaled up too; the copyright stays the smallest footer text, below
+      // both the contact details and the small labels
       const size = Number(style.match(/font-size:\s*([\d.]+)rem/)?.[1]);
       const labels = Number(rule(".contact h3").match(/font-size:\s*([\d.]+)rem/)?.[1]);
-      expect(size).toBeLessThan(1);
-      expect(size).toBeGreaterThan(labels);
+      const body = Number(rule(".contact").match(/font-size:\s*([\d.]+)rem/)?.[1]);
+      expect(body).toBeGreaterThan(1);
+      expect(labels).toBeGreaterThan(0.8);
+      expect(size).toBeGreaterThan(0.9);
+      expect(size).toBeLessThan(body);
+      expect(size).toBeLessThan(labels);
       // the footer's warm off-white, never pure white
       expect(style).toMatch(/color:\s*var\(--caramel-text\)/);
       expect(style).not.toMatch(/#fff\b|#ffffff|\bwhite\b/i);
