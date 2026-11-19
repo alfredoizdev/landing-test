@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { shop } from "./content";
 
 // Fraction of the scroll distance each layer is pushed back down by.
@@ -20,10 +20,22 @@ export function parallaxAt(scroll: number, heroHeight: number) {
   };
 }
 
+const noSubscribe = () => () => {};
+
 export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDetailsElement>(null);
+  // False in the server HTML and until hydration, true once React handles clicks.
+  const hydrated = useSyncExternalStore(
+    noSubscribe,
+    () => true,
+    () => false,
+  );
+  const closeNav = () => {
+    if (navRef.current) navRef.current.open = false;
+  };
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -62,8 +74,31 @@ export default function Hero() {
     <section ref={heroRef} className="hero" aria-labelledby="hero-title">
       <div ref={imageRef} className="hero-bg" aria-hidden="true" />
       <nav aria-label="Page sections">
-        <a href="#menu">Menu</a>
-        <a href="#contact">Contact</a>
+        {/* Until React can close the panel (before hydration or without
+            JavaScript), show the plain links rather than a menu that would
+            stay open after a link is followed. */}
+        {hydrated ? (
+          <details ref={navRef} className="nav-menu">
+            <summary className="nav-toggle" aria-label="Page sections">
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
+            </summary>
+            <div className="nav-panel">
+              <a href="#menu" onClick={closeNav}>
+                Menu
+              </a>
+              <a href="#contact" onClick={closeNav}>
+                Contact
+              </a>
+            </div>
+          </details>
+        ) : (
+          <div style={{ display: "flex", gap: "1.5rem" }}>
+            <a href="#menu">Menu</a>
+            <a href="#contact">Contact</a>
+          </div>
+        )}
       </nav>
       <div ref={contentRef} className="hero-content">
         <p className="brand">{shop.name}</p>
