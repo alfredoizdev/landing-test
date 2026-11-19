@@ -495,6 +495,55 @@ describe("landing page", () => {
     });
   });
 
+  it("tucks the Menu and Contact links behind a hamburger button that opens and closes a panel", () => {
+    render(<Home />);
+    const nav = screen.getByRole("navigation", { name: "Page sections" });
+    // a native <details> disclosure, so the links still work before or without JavaScript
+    const details = nav.querySelector("details")!;
+    const toggle = details.querySelector("summary")!;
+    expect(toggle.getAttribute("aria-label")).toBe("Page sections");
+    expect(details.open).toBe(false);
+    const panel = details.querySelector(".nav-panel")!;
+    expect(within(panel as HTMLElement).getByText("Menu").getAttribute("href")).toBe("#menu");
+    expect(within(panel as HTMLElement).getByText("Contact").getAttribute("href")).toBe("#contact");
+
+    fireEvent.click(toggle);
+    expect(details.open).toBe(true);
+    fireEvent.click(toggle);
+    expect(details.open).toBe(false);
+
+    // following a link closes the panel and still jumps to the section
+    for (const name of ["Menu", "Contact"]) {
+      fireEvent.click(toggle);
+      expect(details.open).toBe(true);
+      const link = within(nav).getByRole("link", { name });
+      expect(fireEvent.click(link)).toBe(true);
+      expect(details.open).toBe(false);
+    }
+  });
+
+  it("keeps the hamburger button and panel in the hero's colours and fonts", () => {
+    expect(cssRule(".nav-toggle")).toMatch(/color:\s*inherit/);
+    expect(cssRule(".nav-panel")).toMatch(/background:\s*var\(--dark\)/);
+    expect(cssRule(".hero nav")).toMatch(/font-family:\s*system-ui, sans-serif/);
+    expect(cssRule(".hero nav")).toMatch(/text-transform:\s*uppercase/);
+  });
+
+  it("puts the hamburger button in the hero's top right corner on wide screens", () => {
+    const nav = cssRule(".hero nav");
+    expect(nav).toMatch(/justify-content:\s*flex-end/);
+    expect(nav).toMatch(/width:\s*100%/);
+    expect(nav).not.toMatch(/max-width/);
+  });
+
+  it("draws the hamburger bars so they stay visible in forced-colors mode", () => {
+    const bars = cssRule(".nav-toggle span");
+    expect(bars).toMatch(/border-bottom:\s*2px solid currentColor/);
+    expect(bars).not.toMatch(/background/);
+    const css = readFileSync(join(process.cwd(), "app", "globals.css"), "utf8");
+    expect(css).toMatch(/@media \(forced-colors: active\)\s*\{\s*\.nav-toggle\s*\{\s*color:\s*ButtonText/);
+  });
+
   it("uses the coffee beans photo as a full-size hero background under a brown overlay", () => {
     const { container } = render(<Home />);
     expect(container.querySelector("section.hero")).toBeTruthy();
