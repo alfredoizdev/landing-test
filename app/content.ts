@@ -80,3 +80,9 @@ export const contact = {
   phone: "(503) 555-0142",
   copyright: "© 2026 Ember & Oak. All rights reserved.",
 };
+
+// Where the pin goes on the location map (214 SW Alder St, Portland).
+export const location = {
+  lat: 45.51865,
+  lng: -122.67449,
+};
