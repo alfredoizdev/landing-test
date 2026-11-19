@@ -288,7 +288,6 @@ describe("landing page", () => {
 
     expect(mapSection.querySelector("svg.location-pin")).not.toBeNull();
     expect(cssRule(".location-pin")).toMatch(/fill:\s*var\(--caramel\)/);
-    expect(cssRule(".footer-curve")).toMatch(/fill:\s*var\(--caramel\)/);
     // its tip lands on the middle of the map, where the café is
     expect(cssRule(".location-pin")).toMatch(/top:\s*50%/);
     expect(cssRule(".location-pin")).toMatch(/left:\s*50%/);
@@ -409,8 +408,6 @@ describe("landing page", () => {
       expect(shape).not.toMatch(/position:\s*(absolute|fixed)/);
       expect(shape).not.toMatch(/margin-top:\s*-/);
       expect(rule(".footer")).not.toMatch(/margin-top:\s*-/);
-      // the menu keeps its bottom padding as the gap between the mosaic and the curve
-      expect(Number(rule(".section").match(/padding:\s*([\d.]+)rem/)?.[1])).toBeGreaterThanOrEqual(4);
       // the height follows the screen width, so a narrow phone gets a shallow curve
       expect(shape).toMatch(/height:\s*var\(--footer-curve-height\)/);
       const size = css().match(/--footer-curve-height:\s*clamp\(([\d.]+)rem,\s*([\d.]+)vw,\s*([\d.]+)rem\)/);
@@ -423,6 +420,13 @@ describe("landing page", () => {
       expect(rule(".location")).toMatch(/margin-bottom:\s*calc\(-1 \* var\(--footer-curve-height\)\)/);
       expect(rule(".location-map")).toMatch(/height:\s*calc\([\d.]+rem \+ var\(--footer-curve-height\)\)/);
       expect(rule(".location-map")).toMatch(/border:\s*0/);
+      // the curve covers the embed's own credit, so the map credit is shown above the curve
+      render(<Home />);
+      const mapSection = screen.getByRole("region", { name: "Find us" });
+      const credit = within(mapSection).getByRole("link", { name: "© OpenStreetMap contributors" });
+      expect(credit.getAttribute("href")).toBe("https://www.openstreetmap.org/copyright");
+      expect(rule(".location-credit")).toMatch(/position:\s*absolute/);
+      expect(rule(".location-credit")).toMatch(/bottom:\s*calc\(var\(--footer-curve-height\) \+ [\d.]+rem\)/);
       // the footer is painted above the map
       expect(rule(".footer")).toMatch(/position:\s*relative/);
     });

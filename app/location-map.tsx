@@ -33,6 +33,16 @@ export default function LocationMap() {
         src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.006},${location.lat - 0.003},${location.lng + 0.006},${location.lat + 0.003}&layer=mapnik`}
         loading="lazy"
       />
+      {/* The footer curve covers the embed's own credit in its bottom corner,
+          so the OpenStreetMap credit is shown again just above the curve. */}
+      <a
+        className="location-credit"
+        href="https://www.openstreetmap.org/copyright"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        © OpenStreetMap contributors
+      </a>
       {/* The embedded map's own pin is always green, so the café gets a caramel
           pin of its own, drawn over the middle of the map where the café sits.
           It hides while the map is being moved, as it would no longer line up. */}

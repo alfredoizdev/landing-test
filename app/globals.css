@@ -450,6 +450,19 @@ h3 {
   fill: var(--caramel);
 }
 
+/* The map's own credit sits under the footer curve, so it is repeated here,
+   just above the curve. */
+.location-credit {
+  position: absolute;
+  right: 0.5rem;
+  bottom: calc(var(--footer-curve-height) + 0.5rem);
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.75rem;
+}
+
 .location-pin circle {
   fill: var(--caramel-text);
 }
